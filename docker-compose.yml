@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  app:
+    container_name: app-blogs
+    restart: unless-stopped
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/var/www
+    networks:
+      - network-blogs
+    environment:
+      MARIADB_HOST: db
+      MARIADB_PORT: 3306
+      MARIADB_DATABASE: db_blog
+      MARIADB_USER: root
+      MARIADB_PASSWORD: blogs
+  nginx:
+    container_name: nginx-service
+    restart: unless-stopped
+    build: 
+      context: ./
+      dockerfile: nginx-dev.Dockerfile
+    ports:
+      - 9001:80
+    networks:
+      - network-blogs
+    depends_on:
+      - app
+  db:
+    container_name: db-blogs
+    image: mariadb:latest
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: blogs
+      MARIADB_DATABASE: db_blog
+      MARIADB_USER: root
+      MARIADB_PASSWORD: blogs
+    volumes:
+      - ./data/db-dev:/var/lib/mysql
+    networks:
+      - network-blogs
+  phpmyadmin:
+    platform: linux/x86_64
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    depends_on:
+      - db
+    ports:
+      - 91:80
+    links:
+      - db
+    environment:
+      PMA_PORT: 3306
+      PMA_HOST: db
+    networks:
+      - network-blogs
+ # used by some services (php) to communicate with other docker-compose.yaml
+networks:
+  network-blogs:
+    driver: bridge
+
+  #phpmyadmin:
+
+
+  
+
+
